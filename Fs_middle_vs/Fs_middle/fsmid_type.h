@@ -1,29 +1,11 @@
 #ifndef _FSMID_TYPE_H_
 #define _FSMID_TYPE_H_
 
+#include "fsmid_port.h"
 #include "fsmid_def.h"
 #include "list_linux.h"
 
 #pragma pack(push,1)
-typedef struct __cp56time2a {
-	unsigned short milliSecond;
-	unsigned char minute:6;
-	unsigned char res1 :1;
-	unsigned char invalid :1;
-
-	unsigned char hour :5;
-	unsigned char res2 :2;
-	unsigned char summerTime :1;
-
-	unsigned char monthDay :5;
-	unsigned char weekDay :3;
-
-	unsigned char month :4;
-	unsigned char res3 :4;
-
-	unsigned char year :7;
-	unsigned char res4 :1;
-}CP56TIME2A;
 
 typedef struct __fsmid_file{
 	struct list_head nodeFsmid;
@@ -44,13 +26,8 @@ typedef struct __fsmid_file{
 	unsigned char* buffer;
 	unsigned int bufSize;
 	unsigned char* currentBuf;
-	struct __fsmid_port *currentPort;
 
 }FSMID_FILE;
-
-typedef struct __fsmid_port{
-	
-}FSMID_PORT;
 
 
 #pragma pack(pop)

@@ -215,6 +215,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\fsmid_log.h"
+				>
+			</File>
+			<File
 				RelativePath=".\fsmid_port.h"
 				>
 			</File>

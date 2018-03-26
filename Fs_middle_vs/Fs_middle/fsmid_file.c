@@ -11,6 +11,11 @@ int fsmid_close(FSMID_FHANDLE handle)
 	return 0;
 }
 
+int fsmid_remove(const char* pName)
+{
+	return 0;
+}
+
 int fsmid_read(FSMID_FHANDLE handle, void* pData, unsigned int length)
 {
 	return 0;
