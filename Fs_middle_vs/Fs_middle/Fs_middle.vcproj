@@ -207,11 +207,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\fsmid_file.c"
+				RelativePath=".\fsmid_file.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\fsmid_log.c"
+				RelativePath=".\fsmid_file.h"
+				>
+			</File>
+			<File
+				RelativePath=".\fsmid_log.cpp"
 				>
 			</File>
 			<File
@@ -223,7 +227,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\fsmid_system.c"
+				RelativePath=".\fsmid_system.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\fsmid_system.h"
 				>
 			</File>
 			<File
