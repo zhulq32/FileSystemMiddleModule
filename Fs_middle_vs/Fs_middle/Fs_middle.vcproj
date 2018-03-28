@@ -41,6 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="fs_middle;test_case"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -171,7 +172,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\Fs_middle.cpp"
+				RelativePath=".\main.cpp"
 				>
 			</File>
 			<File
@@ -203,43 +204,43 @@
 			Name="Fs_middle"
 			>
 			<File
-				RelativePath=".\fsmid_def.h"
+				RelativePath=".\fs_middle\fsmid_def.h"
 				>
 			</File>
 			<File
-				RelativePath=".\fsmid_file.cpp"
+				RelativePath=".\fs_middle\fsmid_file.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\fsmid_file.h"
+				RelativePath=".\fs_middle\fsmid_file.h"
 				>
 			</File>
 			<File
-				RelativePath=".\fsmid_log.cpp"
+				RelativePath=".\fs_middle\fsmid_log.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\fsmid_log.h"
+				RelativePath=".\fs_middle\fsmid_log.h"
 				>
 			</File>
 			<File
-				RelativePath=".\fsmid_port.h"
+				RelativePath=".\fs_middle\fsmid_port.h"
 				>
 			</File>
 			<File
-				RelativePath=".\fsmid_system.cpp"
+				RelativePath=".\fs_middle\fsmid_system.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\fsmid_system.h"
+				RelativePath=".\fs_middle\fsmid_system.h"
 				>
 			</File>
 			<File
-				RelativePath=".\fsmid_type.h"
+				RelativePath=".\fs_middle\fsmid_type.h"
 				>
 			</File>
 			<File
-				RelativePath=".\list_linux.h"
+				RelativePath=".\fs_middle\list_linux.h"
 				>
 			</File>
 		</Filter>

@@ -4,7 +4,7 @@
 #include "fsmid_type.h"
 
 /**
- * fsmid_register() - register log function
+ * FSMID_Register() - register log function
  * @fileHandle: handle of file system
  * @arrayFunction: FSPORT_FUNCTION array registered to file
  * @groupCount: number of log group in the file
@@ -13,10 +13,10 @@
  *
  * This function initialize log group
  */
-int fsmid_register(FSMID_FHANDLE fileHandle, const FSPORT_FUNCTION *arrayFunction, unsigned int groupCount);
+int FSMID_Register(FSMID_FHANDLE fileHandle, const FSPORT_FUNCTION *arrayFunction, unsigned int groupCount);
 
 /**
- * fsmid_push() - add log handle into file
+ * FSMID_Push() - add log handle into file
  * @fileHandle: handle of file system
  * @logHandle: handle of log component
  * @groupIndex: index of log package
@@ -26,10 +26,10 @@ int fsmid_register(FSMID_FHANDLE fileHandle, const FSPORT_FUNCTION *arrayFunctio
  * This function add log into file->list, and will call get_length()
  * to update file->length, call get_time() to update file->time.
  */
-int fsmid_push(FSMID_FHANDLE fileHandle, FSMID_LOG_HANDLE logHandle, unsigned int groupIndex);
+int FSMID_Push(FSMID_FHANDLE fileHandle, FSMID_LOG_HANDLE logHandle, unsigned int groupIndex);
 
 /**
- * fsmid_pop() - get time of log data
+ * FSMID_Pop() - get time of log data
  * @fileHandle: handle of file system
  * @logHandle: handle of log component
  *
@@ -38,6 +38,6 @@ int fsmid_push(FSMID_FHANDLE fileHandle, FSMID_LOG_HANDLE logHandle, unsigned in
  * This function remove log from file->list, and will call get_length()
  * to update file->length, call get_time() to update file->time.
  */
-int fsmid_pop(FSMID_FHANDLE fileHandle, FSMID_LOG_HANDLE logHandle);
+int FSMID_Pop(FSMID_FHANDLE fileHandle, FSMID_LOG_HANDLE logHandle);
 
 #endif

@@ -85,5 +85,15 @@ int FSMID_Seek(FSMID_FHANDLE handle, signed int offset, FSMID_SEEK method);
 */
 int FSMID_Stat(const char* pPathName, FSMID_STAT *pStat);
 
+/**
+* FSMID_List() - list the files under the given folder
+* @pPath: string of path
+* @aList: list object to get by the up layer
+* @numList: number of list objects could be given.
+*
+* Return: real number of list item under the folder
+*
+*/
+int FSMID_List(const char *pPath, FSMID_LIST aList[], unsigned int numList);
 
 #endif

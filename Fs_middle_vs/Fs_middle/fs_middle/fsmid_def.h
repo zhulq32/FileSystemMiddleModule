@@ -10,8 +10,7 @@
 #endif
 
 
-#define FSMID_MAX_PATH			(32)
-#define FSMID_MAX_FILE_NAME		(64)
+#define FSMID_MAX_PATH			(128)
 
 //#define __DEF_CP56TIME2A
 #ifndef __DEF_CP56TIME2A
@@ -49,7 +48,7 @@ enum __fsmid_result{
 	FSMIDR_POINT_NOT_NULL,
 };
 
-typedef enum __fsmid_create_attr{
+typedef enum __fsmid_open_attr{
 	FSMIDO_READ = 1,
 	FSMIDO_WRITE = 4,
 	FSMIDO_PUSHPOP = 8,
@@ -77,6 +76,13 @@ typedef struct __fsmid_stat{
 	unsigned int size;
 	unsigned int offset;
 }FSMID_STAT;
+
+typedef struct __fsmid_list{
+	char pathName[FSMID_MAX_PATH];
+	CP56TIME2A time;
+	unsigned char attribute;
+	unsigned int size;
+}FSMID_LIST;
 
 typedef void * FSMID_FHANDLE;
 #define FSMID_INVALID_HANDLER	((FSMID_FHANDLE)0)

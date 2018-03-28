@@ -1,3 +1,23 @@
+/**
+*
+* @file fsmid_file.c
+*
+* @brief
+*
+* @author  Thomas.Zhu
+*
+* @version 1.0
+*
+* @note Copyright (C), 2018-2018.
+*
+* @date  2018-3-28
+*
+* history
+*
+*    -#Create
+*
+*/
+
 
 #include "list_linux.h"
 #include "fsmid_type.h"
@@ -14,6 +34,8 @@ int FSMID_Open(FSMID_FHANDLE* pHandler, const char* pPathName, FSMID_OPEN_ATTR a
 
 	if(pHandler == NULL)
 		return FSMIDR_BAD_ARGUMENT;
+	if(attribute & (FSMIDO_READ | FSMIDO_PUSHPOP) == (FSMIDO_READ | FSMIDO_PUSHPOP))
+		return FSMIDR_CONFLICT;
 
 	pFile = fsmid_search(pPathName);
 	if(attribute & FSMIDO_CREATE)
@@ -21,17 +43,18 @@ int FSMID_Open(FSMID_FHANDLE* pHandler, const char* pPathName, FSMID_OPEN_ATTR a
 		if(pFile)
 			return FSMIDR_CONFLICT;
 		pFile = fsmid_create_new(pPathName,attribute);
+		if(pFile == NULL)
+			return FSMIDR_CONFLICT;
+		list_add_tail(&pFile->_node,&fsmid_system.headFile);
 	}
 	else
 	{
 		pFile = fsmid_open_exist(pPathName,attribute);
+		if(pFile == NULL)
+			return FSMIDR_NOT_EXIST;
 	}
-	if(pFile)
-	{
-		*pHandler = (FSMID_FHANDLE)pFile;
-		return FSMIDR_OK;
-	}
-	return FSMIDR_CONFLICT;
+	*pHandler = (FSMID_FHANDLE)pFile;
+	return FSMIDR_OK;
 }
 
 int FSMID_Close(FSMID_FHANDLE handle)
@@ -57,11 +80,11 @@ int FSMID_Remove(const char* pPathName)
 	if(pFile->status == FSMIDS_OPENED)
 		return FSMIDR_CONFLICT;
 
-	result = fsmid_ulink_system(pFile);
+	result = fsmid_release_resource(pFile);
 	if(result != FSMIDR_OK)
 		return result;
 
-	result = fsmid_release_resource(pFile);
+	result = fsmid_ulink_system(pFile);
 	if(result != FSMIDR_OK)
 		return result;
 
@@ -227,7 +250,7 @@ ErrorCondition:
 	return result;
 }
 
-int FSMID_Stat(const char* pPathName, FSMID_STAT *pStat)
+int FSMID_Stat(const char *pPathName, FSMID_STAT *pStat)
 {
 	FSMID_FILE *pFile;
 	
@@ -244,4 +267,31 @@ int FSMID_Stat(const char* pPathName, FSMID_STAT *pStat)
 	pStat->offset = pFile->bufOffset + (unsigned int)(pFile->pCurrent - pFile->pBuffer);
 
 	return 0;
+}
+
+int FSMID_List(const char *pPath, FSMID_LIST aList[], unsigned int numList)
+{
+	unsigned int realNum = 0;
+	unsigned int nameLength = strlen(pPath);
+	struct list_head *containter;
+	FSMID_FILE *iterator;
+
+	if(pPath[nameLength - 1] == '\\')
+		nameLength --;
+	list_for_each(containter,&fsmid_system.headFile)
+	{
+		iterator = list_entry(containter,FSMID_FILE,_node);
+		memset(aList[realNum].pathName,0,FSMID_MAX_PATH);
+		fsmid_get_path_name(iterator,aList[realNum].pathName);
+		if(memcmp(pPath,aList[realNum].pathName,nameLength) == 0 && aList[realNum].pathName[nameLength] == '\\')
+		{
+			memcpy(&aList[realNum].time,&iterator->time,sizeof(CP56TIME2A));
+			aList[realNum].attribute,&iterator->attribute;
+			aList[realNum].size,&iterator->size;
+			realNum ++;
+			if(realNum >= numList)
+				return realNum;
+		}
+	}
+	return realNum;	
 }

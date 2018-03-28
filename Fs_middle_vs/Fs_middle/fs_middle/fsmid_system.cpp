@@ -5,7 +5,7 @@
 
 FSMID_SYSTEM fsmid_system;
 
-void fsmid_init()
+void FSMID_Init()
 {
 	INIT_LIST_HEAD(&fsmid_system.headFile);
 // 	fsmid_system.headFile.prev = &fsmid_system.headFile;
@@ -107,6 +107,20 @@ int fsmid_set_path_name( FSMID_FILE *pFile, const char *pPathName)
 	return FSMIDR_OK;
 }
 
+void fsmid_get_path_name( FSMID_FILE *pFile, char *pPathName)
+{
+	fsmid_assert(pFile,__LINE__);
+	if(pFile->pPath)
+	{
+		memcpy(pPathName,pFile->pPath,strlen(pFile->pName) + (unsigned int)(pFile->pName - pFile->pPath) + 1);
+		pPathName[(unsigned int)(pFile->pName - pFile->pPath)] = '\\';
+	}
+	else
+	{
+		memcpy(pPathName,pFile->pName,strlen(pFile->pName) + 1);
+	}
+}
+
 
 FSMID_FILE* fsmid_create_new(const char *pPathName, FSMID_OPEN_ATTR attribute)
 {
@@ -199,7 +213,7 @@ EOFunc:
 	if(pFile->pBuffer == NULL)
 	{
 		pFile->pBuffer = fsmid_malloc(unsigned char,iterator->size);
-		fsmid_assert(pFile->pBuffer);
+		fsmid_assert(pFile->pBuffer,__LINE__);
 	}
 	pFile->bufSize = iterator->size;
 	pFile->pCurrent = pFile->pBuffer;
@@ -233,7 +247,7 @@ EOFunc:
 	if(pFile->pBuffer == NULL)
 	{
 		pFile->pBuffer = fsmid_malloc(unsigned char,iterator->size);
-		fsmid_assert(pFile->pBuffer);
+		fsmid_assert(pFile->pBuffer,__LINE__);
 	}
 	pFile->bufSize = iterator->size;
 	pFile->pCurrent = pFile->pBuffer;

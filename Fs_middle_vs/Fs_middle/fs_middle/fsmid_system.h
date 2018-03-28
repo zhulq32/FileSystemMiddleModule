@@ -1,11 +1,13 @@
 #ifndef _FSMID_SYSTEM_H_
 #define _FSMID_SYSTEM_H_
 
-void fsmid_init();
+void FSMID_Init();
 
 FSMID_FILE * fsmid_search( const char* pPathName);
 
 int fsmid_set_path_name( FSMID_FILE *pFile, const char *pPathName);
+
+void fsmid_get_path_name( FSMID_FILE *pFile, char *pPathName);
 
 FSMID_FILE* fsmid_create_new(const char *pPathName, FSMID_OPEN_ATTR attribute);
 
