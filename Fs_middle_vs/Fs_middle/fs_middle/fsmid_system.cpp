@@ -1,15 +1,18 @@
 
 #include "list_linux.h"
 #include "fsmid_type.h"
+#include "fsmid_system.h"
 #include <string.h>
 
 FSMID_SYSTEM fsmid_system;
 
-void FSMID_Init()
+void FSMID_Init(const struct __fsmid_callback *pCallback)
 {
 	INIT_LIST_HEAD(&fsmid_system.headFile);
 // 	fsmid_system.headFile.prev = &fsmid_system.headFile;
 // 	fsmid_system.headFile.next = &fsmid_system.headFile;
+
+	fsmid_system.callback = pCallback;
 }
 
 //package path and name to one string, need release buffer after not use
@@ -109,7 +112,7 @@ int fsmid_set_path_name( FSMID_FILE *pFile, const char *pPathName)
 
 void fsmid_get_path_name( FSMID_FILE *pFile, char *pPathName)
 {
-	fsmid_assert(pFile,__LINE__);
+	fsmid_assert(pFile,__FUNCTION__,__LINE__);
 	if(pFile->pPath)
 	{
 		memcpy(pPathName,pFile->pPath,strlen(pFile->pName) + (unsigned int)(pFile->pName - pFile->pPath) + 1);
@@ -121,137 +124,231 @@ void fsmid_get_path_name( FSMID_FILE *pFile, char *pPathName)
 	}
 }
 
-
-FSMID_FILE* fsmid_create_new(const char *pPathName, FSMID_OPEN_ATTR attribute)
+static void __fsmid_clear_element(FSMID_FILE *pFile)
 {
-	FSMID_FILE *pFile;
+	struct list_head *container;
+	FSMID_ELEMENT *iterator;
 
-	pFile = fsmid_malloc(FSMID_FILE,1);
-	if(pFile == NULL)
-		return NULL;
-	memset(pFile,0,sizeof(FSMID_FILE));
-	pFile->attribute = attribute;
+	if(pFile->pPath)
+		fsmid_free(pFile->pPath);
+	else if(pFile->pName)
+		fsmid_free(pFile->pName);
 
-	return pFile;
+	for( pFile->currentLogGroup = 0; pFile->currentLogGroup < pFile->groupCount; pFile->currentLogGroup++ )
+	{
+		list_for_each(container, (pFile->headTableElement + pFile->currentLogGroup))
+		{
+			if(pFile->attribute&FSMIDO_CREATE_B)
+			{
+				iterator = list_entry(container, FSMID_ELEMENT, _node);
+				fsmid_free(iterator->DATA.buffer);
+			}
+			list_del(container);
+		}
+	}
+	pFile->size = 0;
+	if(pFile->attribute&FSMIDO_CREATE_T)
+		fsmid_free(pFile->pBuffer);
+	pFile->pBuffer = NULL;
+	pFile->pCurrent = NULL;
 }
 
 
-FSMID_FILE* fsmid_open_exist(const char *pPathName, FSMID_OPEN_ATTR attribute)
+int fsmid_create_new(FSMID_FILE **ppFile, const char *pPathName, FSMID_OPEN_ATTR attribute)
 {
-	FSMID_FILE *pFile;
+	int result;
+	FSMID_FILE *pFile = NULL;
+
+	if((attribute&FSMID_CREATE_MASK) == FSMIDO_CREATE_INVALID||(attribute&FSMID_CREATE_MASK) == FSMIDO_CREATE_NONE)
+		return FSMIDR_BAD_ARGUMENT;
 
 	pFile = fsmid_malloc(FSMID_FILE,1);
 	if(pFile == NULL)
-		return NULL;
+		return FSMIDR_LEAK_MEMORY;
+
 	memset(pFile,0,sizeof(FSMID_FILE));
 	pFile->attribute = attribute;
 
-	return pFile;
+	fsmid_mutex_create(pFile->mutex);
+	result = fsmid_set_path_name(pFile,pPathName);
+	if(result != FSMIDR_OK) goto ErrorCondition;
+	fsmid_get_systime(&pFile->time);
+	//binary file
+	if(attribute & FSMIDO_CREATE_B)
+	{
+		pFile->headTableElement = fsmid_malloc(struct list_head,1);
+		fsmid_assert(pFile->headTableElement,__FUNCTION__,__LINE__);
+		pFile->groupCount = 1;
+	}
+	*ppFile = pFile;
+	list_add_tail(&pFile->_node,&fsmid_system.headFile);
+	return FSMIDR_OK;
+ErrorCondition:
+	if(pFile)
+	{
+		__fsmid_clear_element(pFile);
+		fsmid_release_close(pFile);
+		fsmid_mutex_release(pFile->mutex);
+		fsmid_free(pFile);
+	}
+	return result;
+}
+
+void __fsmid_get_element_data(FSMID_FILE *pFile, FSMID_ELEMENT *iterator)
+{
+	if(pFile->attribute & FSMIDO_CREATE_B)
+	{
+		pFile->pBuffer = iterator->DATA.buffer;
+	}
+	else
+	{
+		if(pFile->pBuffer && pFile->bufferSize < iterator->size)
+		{
+			fsmid_free(pFile->pBuffer);
+			pFile->pBuffer = fsmid_malloc(unsigned char,iterator->size);
+			fsmid_assert(pFile->pBuffer,__FUNCTION__,__LINE__);
+			pFile->bufferSize = iterator->size;
+		}
+		fsmid_system.callback->get_data(iterator->DATA.handle,pFile->pBuffer);
+	}
+	pFile->pCurrent = pFile->pBuffer;
+}
+
+
+int fsmid_init_exist(FSMID_FILE *pFile)
+{
+	FSMID_ELEMENT *iterator;
+	if(pFile->groupCount && pFile->size)
+	{
+		pFile->pContainer = pFile->headTableElement[0].next;
+		iterator = list_first_entry(pFile->pContainer,FSMID_ELEMENT,_node);
+		__fsmid_get_element_data(pFile,iterator);
+		pFile->bufferOffset = 0;
+		pFile->currentLogGroup = 0;
+	}
+	return 0;
+}
+
+void fsmid_release_close(FSMID_FILE *pFile)
+{
+	if((pFile->attribute & FSMIDO_CREATE_T) && pFile->pBuffer)
+	{
+		fsmid_free(pFile->pBuffer);
+		pFile->pBuffer = NULL;
+		pFile->bufferSize = 0;
+		pFile->pCurrent = NULL;
+		pFile->bufferOffset = 0;
+		pFile->pContainer = NULL;
+		pFile->currentLogGroup = 0;
+	}
 }
 
 int fsmid_ulink_system(FSMID_FILE* pFile)
 {
-	return 0;
-}
+	struct list_head *container;
+	FSMID_FILE* iterator;
 
-int fsmid_release_resource(FSMID_FILE *pFile)
-{
-	return 0;
-}
+	if(pFile->status == FSMIDS_OPENED)
+		return FSMIDR_ACCESS;
+	pFile->status = FSMIDS_OPENED;
 
+	list_for_each(container,&fsmid_system.headFile)
+	{
+		iterator = list_entry(container,FSMID_FILE,_node);
+		if(iterator == pFile)
+		{
+			list_del(container);
+			__fsmid_clear_element(pFile);
+			fsmid_mutex_release(pFile->mutex);
+			fsmid_free(pFile);
+			return FSMIDR_OK;
+		}
+	}
+
+	return FSMIDR_NOT_EXIST;
+}
 
 int fsmid_search_log(FSMID_FILE *pFile, unsigned int offset)
 {
 	struct list_head *container;  
-	FSMID_LIST_LOG *iterator;  
+	FSMID_ELEMENT *iterator;  
 
-	pFile->bufOffset = 0;
+	pFile->bufferOffset = 0;
 	for( pFile->currentLogGroup = 0; pFile->currentLogGroup < pFile->groupCount; pFile->currentLogGroup++ )
 	{
-		list_for_each(container, (pFile->headPortTable + pFile->currentLogGroup))
+		list_for_each(container, (pFile->headTableElement + pFile->currentLogGroup))
 		{
-			iterator = list_entry(container, FSMID_LIST_LOG, _node);
-			if(pFile->bufOffset <= offset && pFile->bufOffset + iterator->size > offset)
+			iterator = list_entry(container, FSMID_ELEMENT, _node);
+			if(pFile->bufferOffset <= offset && pFile->bufferOffset + iterator->size > offset)
 			{
-				pFile->pBuffer = fsmid_malloc(unsigned char,iterator->size);
-				if(pFile->pBuffer == NULL)
-					return FSMIDR_LEAK_MEMORY;
-				pFile->bufSize = iterator->size;
-				pFile->pCurrent = pFile->pBuffer + offset - pFile->bufOffset;
+				if(pFile->attribute & FSMIDO_CREATE_B)
+					pFile->pBuffer = iterator->DATA.buffer;
+				else
+					fsmid_system.callback->get_data(iterator->DATA.handle,pFile->pBuffer);
+				pFile->bufferSize = iterator->size;
+				pFile->pCurrent = pFile->pBuffer + offset - pFile->bufferOffset;
 				pFile->pContainer = container;
-				return ___fsmid_get_data(pFile,iterator->handle);
+				return FSMIDR_OK;
 			}
-			pFile->bufOffset += iterator->size;
+			pFile->bufferOffset += iterator->size;
 		}   
 	}      
 	return FSMIDR_GENERAL;
 }
 
-FSMID_LIST_LOG* fsmid_next_log(FSMID_FILE *pFile)
+FSMID_ELEMENT* fsmid_next_element(FSMID_FILE *pFile)
 {
-	FSMID_LIST_LOG* iterator;
+	FSMID_ELEMENT* iterator;
 
 	pFile->pContainer = pFile->pContainer->next;
-	if(pFile->pContainer != &pFile->headPortTable[pFile->currentLogGroup])
+	if(pFile->pContainer != &pFile->headTableElement[pFile->currentLogGroup])
 	{
-		iterator = list_entry(pFile->pContainer, FSMID_LIST_LOG, _node);
+		iterator = list_entry(pFile->pContainer, FSMID_ELEMENT, _node);
 		if(iterator == NULL) return NULL;
 		goto EOFunc;
 	}
 	pFile->currentLogGroup ++;
 	if(pFile->currentLogGroup >= pFile->groupCount)
 		return NULL;
-	pFile->pContainer = pFile->headPortTable[pFile->currentLogGroup].next;
-	iterator = list_entry(pFile->pContainer, FSMID_LIST_LOG, _node);
+	pFile->pContainer = pFile->headTableElement[pFile->currentLogGroup].next;
+	iterator = list_entry(pFile->pContainer, FSMID_ELEMENT, _node);
 	if(iterator == NULL) return NULL;
 EOFunc:
-	if(pFile->pBuffer && iterator->size != pFile->bufSize)
-	{
-		fsmid_free(pFile->pBuffer);
-		pFile->pBuffer = NULL;
-	}
-	if(pFile->pBuffer == NULL)
-	{
-		pFile->pBuffer = fsmid_malloc(unsigned char,iterator->size);
-		fsmid_assert(pFile->pBuffer,__LINE__);
-	}
-	pFile->bufSize = iterator->size;
+	pFile->bufferOffset += pFile->bufferSize;
+	if(pFile->attribute & FSMIDO_CREATE_B)
+		pFile->pBuffer = iterator->DATA.buffer;
+	else
+		fsmid_system.callback->get_data(iterator->DATA.handle,pFile->pBuffer);
+	pFile->bufferSize = iterator->size;
 	pFile->pCurrent = pFile->pBuffer;
-	fsmid_assert(___fsmid_get_data(pFile,iterator->handle)==0,__LINE__);
 	return iterator;
 }
 
-FSMID_LIST_LOG* fsmid_prev_log(FSMID_FILE *pFile)
+FSMID_ELEMENT* fsmid_prev_element(FSMID_FILE *pFile)
 {
-	FSMID_LIST_LOG* iterator;
+	FSMID_ELEMENT* iterator;
 
 	pFile->pContainer = pFile->pContainer->prev;
-	if(pFile->pContainer != &pFile->headPortTable[pFile->currentLogGroup])
+	if(pFile->pContainer != &pFile->headTableElement[pFile->currentLogGroup])
 	{
-		iterator = list_entry(pFile->pContainer, FSMID_LIST_LOG, _node);
+		iterator = list_entry(pFile->pContainer, FSMID_ELEMENT, _node);
 		if(iterator == NULL) return NULL;
 		goto EOFunc;
 	}
 	if(pFile->currentLogGroup == 0)
 		return NULL;
 	pFile->currentLogGroup --;
-	pFile->pContainer = pFile->headPortTable[pFile->currentLogGroup].prev;
-	iterator = list_entry(pFile->pContainer, FSMID_LIST_LOG, _node);
+	pFile->pContainer = pFile->headTableElement[pFile->currentLogGroup].prev;
+	iterator = list_entry(pFile->pContainer, FSMID_ELEMENT, _node);
 	if(iterator == NULL) return NULL;
 EOFunc:
-	if(pFile->pBuffer && iterator->size != pFile->bufSize)
-	{
-		fsmid_free(pFile->pBuffer);
-		pFile->pBuffer = NULL;
-	}
-	if(pFile->pBuffer == NULL)
-	{
-		pFile->pBuffer = fsmid_malloc(unsigned char,iterator->size);
-		fsmid_assert(pFile->pBuffer,__LINE__);
-	}
-	pFile->bufSize = iterator->size;
+	if(pFile->attribute & FSMIDO_CREATE_B)
+		pFile->pBuffer = iterator->DATA.buffer;
+	else
+		fsmid_system.callback->get_data(iterator->DATA.handle,pFile->pBuffer);
+	pFile->bufferSize = iterator->size;
 	pFile->pCurrent = pFile->pBuffer;
-	fsmid_assert(___fsmid_get_data(pFile,iterator->handle)==0,__LINE__);
+	pFile->bufferOffset -= pFile->bufferSize;
 	return iterator;
 }
 

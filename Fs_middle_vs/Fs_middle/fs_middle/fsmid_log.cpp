@@ -2,25 +2,26 @@
 #include "list_linux.h"
 #include "fsmid_type.h"
 
-int FSMID_Register(FSMID_FHANDLE fileHandle, const FSPORT_FUNCTION *arrayFunction, unsigned int groupCount)
+extern FSMID_SYSTEM fsmid_system;
+
+int FSMID_Register(FSMID_FHANDLE fileHandle, unsigned int groupCount)
 {
-	int i;
+	unsigned int i;
 	FSMID_FILE *pFile = (FSMID_FILE*)fileHandle;
 
 	if(pFile->status != FSMIDS_OPENED)
 		return FSMIDR_ACCESS;
-	if((pFile->attribute & FSMIDO_PUSHPOP) == 0)
+	if((pFile->attribute & (FSMIDO_WRITE|FSMID_CREATE_MASK)) != (FSMIDO_CREATE_T|FSMIDO_WRITE))
 		return FSMIDR_ACCESS;
-	if(pFile->pFunctionTable || pFile->groupCount || pFile->headPortTable)
+	if(pFile->groupCount || pFile->headTableElement)
 		return FSMIDR_CONFLICT;
 
 	fsmid_mutex_lock(pFile->mutex);
 
-	pFile->pFunctionTable = arrayFunction;
 	pFile->groupCount = groupCount;
-	pFile->headPortTable = fsmid_malloc(struct list_head,groupCount);
+	pFile->headTableElement = fsmid_malloc(struct list_head,groupCount);
 	for(i = 0; i < groupCount; i++)
-		INIT_LIST_HEAD(pFile->headPortTable + i);
+		INIT_LIST_HEAD(pFile->headTableElement + i);
 
 	fsmid_mutex_unlock(pFile->mutex);
 	return 0;
@@ -29,27 +30,27 @@ int FSMID_Register(FSMID_FHANDLE fileHandle, const FSPORT_FUNCTION *arrayFunctio
 int FSMID_Push(FSMID_FHANDLE fileHandle, FSMID_LOG_HANDLE logHandle, unsigned int groupIndex)
 {
 	FSMID_FILE *pFile = (FSMID_FILE*)fileHandle;
-	FSMID_LIST_LOG *pLog;
+	FSMID_ELEMENT *pLog;
 
 	if(pFile->status != FSMIDS_OPENED)
 		return FSMIDR_ACCESS;
-	if((pFile->attribute & FSMIDO_PUSHPOP) == 0)
+	if((pFile->attribute & (FSMIDO_WRITE|FSMID_CREATE_MASK)) != (FSMIDO_CREATE_T|FSMIDO_WRITE))
 		return FSMIDR_ACCESS;
-	if( !pFile->pFunctionTable || !pFile->groupCount || !pFile->headPortTable)
+	if( !pFile->groupCount || !pFile->headTableElement)
 		return FSMIDR_CONFLICT;
 	if(groupIndex >= pFile->groupCount)
 		return FSMIDR_NOT_EXIST;
 	
-	pLog = fsmid_malloc(FSMID_LIST_LOG,1);
+	pLog = fsmid_malloc(FSMID_ELEMENT,1);
 	if(pLog == NULL)
 		return FSMIDR_LEAK_MEMORY;
 
 	fsmid_mutex_lock(pFile->mutex);
 
-	pLog->handle = logHandle;
-	pLog->size = pFile->pFunctionTable[groupIndex].get_length(logHandle);
-	list_add_tail(&pLog->_node,pFile->headPortTable + groupIndex);
-	pFile->pFunctionTable[groupIndex].get_time(logHandle,&pFile->time);
+	pLog->DATA.handle = logHandle;
+	pLog->size = fsmid_system.callback->get_length(logHandle);
+	list_add_tail(&pLog->_node,pFile->headTableElement + groupIndex);
+	fsmid_system.callback->get_time(logHandle,&pFile->time);
 	pFile->size += pLog->size;
 
 	fsmid_mutex_unlock(pFile->mutex);
@@ -60,15 +61,15 @@ int FSMID_Push(FSMID_FHANDLE fileHandle, FSMID_LOG_HANDLE logHandle, unsigned in
 int FSMID_Pop(FSMID_FHANDLE fileHandle, FSMID_LOG_HANDLE logHandle)
 {
 	FSMID_FILE *pFile = (FSMID_FILE*)fileHandle;
-	int group;
+	unsigned int group;
 	struct list_head *container;
-	FSMID_LIST_LOG *iterator;
+	FSMID_ELEMENT *iterator;
 
 	if(pFile->status != FSMIDS_OPENED)
 		return FSMIDR_ACCESS;
-	if((pFile->attribute & FSMIDO_PUSHPOP) == 0)
+	if((pFile->attribute & (FSMIDO_WRITE|FSMID_CREATE_MASK)) != (FSMIDO_CREATE_T|FSMIDO_WRITE))
 		return FSMIDR_ACCESS;
-	if( !pFile->pFunctionTable || !pFile->groupCount || !pFile->headPortTable)
+	if( !pFile->groupCount || !pFile->headTableElement)
 		return FSMIDR_CONFLICT;
 
 
@@ -76,13 +77,13 @@ int FSMID_Pop(FSMID_FHANDLE fileHandle, FSMID_LOG_HANDLE logHandle)
 	
 	for( group = 0; group < pFile->groupCount; group++ )
 	{
-		list_for_each(container,pFile->headPortTable + group)
+		list_for_each(container,pFile->headTableElement + group)
 		{
-			iterator = list_entry(container, FSMID_LIST_LOG, _node);
-			if(iterator->handle == logHandle)
+			iterator = list_entry(container, FSMID_ELEMENT, _node);
+			if(iterator->DATA.handle == logHandle)
 			{
 				pFile->size -= iterator->size;
-				pFile->pFunctionTable[group].get_time(FSMID_INVALID_LOG_HANDLER,&pFile->time);
+				fsmid_get_systime(&pFile->time);
 				list_del(container);
 				fsmid_mutex_unlock(pFile->mutex);
 				return FSMIDR_OK;

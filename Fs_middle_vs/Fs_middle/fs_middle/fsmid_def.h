@@ -10,7 +10,8 @@
 #endif
 
 
-#define FSMID_MAX_PATH			(128)
+#define FSMID_MAX_PATH				(128)
+#define FSMID_SAFTY_BUFFER_SIZE		(512)
 
 //#define __DEF_CP56TIME2A
 #ifndef __DEF_CP56TIME2A
@@ -50,9 +51,16 @@ enum __fsmid_result{
 
 typedef enum __fsmid_open_attr{
 	FSMIDO_READ = 1,
-	FSMIDO_WRITE = 4,
-	FSMIDO_PUSHPOP = 8,
-	FSMIDO_CREATE = 16,
+	FSMIDO_WRITE = 2,//PushPop seems same as write.
+	FSMID_ACCESS_MASK = (FSMIDO_READ|FSMIDO_WRITE),
+	FSMID_READ_WRITE = FSMID_ACCESS_MASK,
+	FSMIDO_ACCESS_NONE = 0,
+
+	FSMIDO_CREATE_T = 16,//Create a text file. Normally LOG->COMM
+	FSMIDO_CREATE_B = 32,//Create a binary file. Normally COMM->LOG
+	FSMID_CREATE_MASK = (FSMIDO_CREATE_T|FSMIDO_CREATE_B),
+	FSMIDO_CREATE_INVALID = FSMID_CREATE_MASK,
+	FSMIDO_CREATE_NONE = 0,
 }FSMID_OPEN_ATTR;
 
 typedef enum __fsmid_file_status{

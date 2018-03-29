@@ -172,6 +172,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\fsmid_test_case.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\fsmid_test_port.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>
@@ -203,46 +211,58 @@
 		<Filter
 			Name="Fs_middle"
 			>
-			<File
-				RelativePath=".\fs_middle\fsmid_def.h"
+			<Filter
+				Name="inc"
 				>
-			</File>
-			<File
-				RelativePath=".\fs_middle\fsmid_file.cpp"
+				<File
+					RelativePath=".\fs_middle\fsmid_def.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fs_middle\fsmid_file.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fs_middle\fsmid_inc.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fs_middle\fsmid_log.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fs_middle\fsmid_port.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fs_middle\fsmid_system.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fs_middle\fsmid_type.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fs_middle\list_linux.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="src"
 				>
-			</File>
-			<File
-				RelativePath=".\fs_middle\fsmid_file.h"
-				>
-			</File>
-			<File
-				RelativePath=".\fs_middle\fsmid_log.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\fs_middle\fsmid_log.h"
-				>
-			</File>
-			<File
-				RelativePath=".\fs_middle\fsmid_port.h"
-				>
-			</File>
-			<File
-				RelativePath=".\fs_middle\fsmid_system.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\fs_middle\fsmid_system.h"
-				>
-			</File>
-			<File
-				RelativePath=".\fs_middle\fsmid_type.h"
-				>
-			</File>
-			<File
-				RelativePath=".\fs_middle\list_linux.h"
-				>
-			</File>
+				<File
+					RelativePath=".\fs_middle\fsmid_file.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\fs_middle\fsmid_log.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\fs_middle\fsmid_system.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath=".\ReadMe.txt"

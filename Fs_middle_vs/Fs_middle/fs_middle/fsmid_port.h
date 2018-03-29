@@ -7,12 +7,13 @@
 #define fsmid_malloc(typ,sz)		(typ *)malloc(sz*sizeof(typ))
 #define fsmid_free(ptr)				free(ptr)
 
-#define fsmid_assert(cond,str)		if(!(cond)) while(1)
+#define fsmid_assert(cond,func,line)		if(!(cond)) while(1)
 
 #define FSMID_MUTEX					unsigned int//xSemaphoreHandle
 #define fsmid_mutex_create(mtx)		//vSemaphoreCreateBinary(mtx)
 #define fsmid_mutex_lock(mtx)		//xSemaphoreTake(mtx,portMAX_DELAY)
 #define fsmid_mutex_unlock(mtx)		//xSemaphoreGive(mtx)
+#define fsmid_mutex_release(mtx)	//vSemaphoreCreateBinary(mtx)
 
 #define fsmid_get_systime(tm)		//(tm)
 

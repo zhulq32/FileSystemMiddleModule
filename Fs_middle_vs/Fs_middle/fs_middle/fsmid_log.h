@@ -4,16 +4,19 @@
 #include "fsmid_type.h"
 
 /**
+ * Functions below can only operate a (FSMIDO_CREATE_T|FSMIDO_WRITE) attribute file.
+ */
+
+/**
  * FSMID_Register() - register log function
  * @fileHandle: handle of file system
- * @arrayFunction: FSPORT_FUNCTION array registered to file
  * @groupCount: number of log group in the file
  *
  * Return: error code, 0 on success
  *
  * This function initialize log group
  */
-int FSMID_Register(FSMID_FHANDLE fileHandle, const FSPORT_FUNCTION *arrayFunction, unsigned int groupCount);
+int FSMID_Register(FSMID_FHANDLE fileHandle, unsigned int groupCount);
 
 /**
  * FSMID_Push() - add log handle into file

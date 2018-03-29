@@ -3,7 +3,6 @@
 
 #include "stdafx.h"
 #include "list_linux.h"
-#include "fsmid_type.h"
 
 struct test_list  
 {  
@@ -16,7 +15,7 @@ struct list_head myHead = {
 	&(myHead), &(myHead)  
 };  
 
-FSMID_FILE f;  
+extern void fsmid_test_task(void*);
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -30,7 +29,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	myList[3].name = "i3";
 	myList[4].value = 4;
 	myList[4].name = "i4";
-	memset(&f,0,sizeof(f));
 	unsigned int i = 0;  
 # if 1
 	list_add_tail(&myList[0]._node, &myHead);  
@@ -56,6 +54,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	iterator = list_entry(container, struct test_list, _node);  
 	printf("%d %s\n", iterator->value, iterator->name);  
 
+	fsmid_test_task(NULL);
 	getchar();  
 	return 0;
 }
