@@ -1,6 +1,8 @@
 #ifndef _FSMID_FILE_H_
 #define _FSMID_FILE_H_
 
+typedef void* FSMID_FHANDLE;
+
 /**
 * FSMID_Open() - open file
 * @pHandler: file handle upload from file system
@@ -15,7 +17,7 @@
 * READ/WRITE feature for COMM layer.
 *
 */
-int FSMID_Open(FSMID_FHANDLE* pHandler, const char* pPathName, FSMID_OPEN_ATTR attribute);
+FSMID_FHANDLE FSMID_Open(const char* pPathName, FSMID_OPEN_ATTR attribute);
 
 /**
 * FSMID_Close() - close file
@@ -97,3 +99,4 @@ int FSMID_Stat(const char* pPathName, FSMID_STAT *pStat);
 int FSMID_List(const char *pPath, FSMID_LIST aList[], unsigned int numList);
 
 #endif
+

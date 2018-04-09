@@ -19,15 +19,12 @@
 */
 
 
-#include "list_linux.h"
-#include "fsmid_type.h"
-#include "fsmid_system.h"
+/*
+#include "..\inc\list_linux.h"
+#include "..\inc\fsmid_type.h"
+#include "..\inc\fsmid_system.h"
 #include <stdio.h>
 #include <string.h>
-
-#ifndef min
-#define min(a,b)		(((a)<(b))?(a):(b))
-#endif
 
 extern FSMID_SYSTEM fsmid_system;
 
@@ -108,7 +105,7 @@ int FSMID_Read(FSMID_FHANDLE handle, void* pData, unsigned int length)
 	fsmid_assert(pFile && pData && length,__FUNCTION__,__LINE__);
 	if(pFile->status == FSMIDS_NOT_OPEN || (pFile->attribute&FSMIDO_READ)==0)
 		return FSMIDR_BAD_ARGUMENT;
-	
+
 	internalOffset = pFile->pCurrent - pFile->pBuffer;
 	if(pFile->bufferOffset + internalOffset + length >= pFile->size)
 		return FSMIDR_BAD_ARGUMENT;
@@ -257,7 +254,7 @@ ErrorCondition:
 int FSMID_Stat(const char *pPathName, FSMID_STAT *pStat)
 {
 	FSMID_FILE *pFile;
-	
+
 	if(pStat == NULL)
 		return FSMIDR_BAD_ARGUMENT;
 	pFile = fsmid_search(pPathName);
@@ -298,4 +295,121 @@ int FSMID_List(const char *pPath, FSMID_LIST aList[], unsigned int numList)
 		}
 	}
 	return realNum;	
+}
+*/
+#include "commonDefEx.h"
+#include "dbmsV1.h"
+#include "dpa10x.h"
+
+#include "list_linux.h"
+#include "fsmid_def.h"
+#include "fsmid_log.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#define FSFILE_SIZE				64
+#define FSFILE_ATTR_TIME		(1<<0)
+#define FSFILE_ATTR_OPEN		(1<<1)
+#define FSFILE_ATTR_EVENT		(1<<2)
+
+typedef struct __fsmid_file_info{
+	FSLOG* pLog;
+	int (*formatHeader)(struct __fsmid_file*, char* buf, unsigned short bufsize);
+}FSFILE_INFORMATION;
+
+typedef struct __fsmid_file{
+	struct list_head _node;
+
+	char name[FSFILE_SIZE];
+	unsigned int size;
+	unsigned int time[2];
+	unsigned int attribute;
+
+	unsigned int offset;
+
+	unsigned int indexRead;
+
+	FSFILE_INFORMATION *pInformation;
+}FSFILE;
+
+
+static unsigned int __cp56_to_unix(CP56TIME2A* pTime)
+{
+	return 0;
+}
+
+static struct list_head headLog;
+
+void FSFILE_Init()
+{
+	INIT_LIST_HEAD(&headLog);
+}
+
+
+FSFILE *FSFILE_Create(const char *pPathName, FSFILE_INFORMATION *pInformation, CP56TIME2A *pDateStart, CP56TIME2A *pDateEnd)
+{
+	FSFILE *pFile;
+	
+	fsmid_assert(!xor(pDateStart,pDateEnd),__FUNCTION__,__LINE__);
+
+	pFile = fsmid_malloc(FSFILE,1);
+	memset(pFile,0,sizeof(FSFILE));
+	memcpy(pFile->name,pPathName,min(strlen(pPathName),FSFILE_SIZE-1));
+	if(pDateStart)
+	{
+		pFile->attribute = FSFILE_ATTR_TIME;
+		pFile->time[0] = __cp56_to_unix(pDateStart);
+		pFile->time[1] = __cp56_to_unix(pDateEnd);
+	}
+	else
+	{
+		pFile->time[0] = 0;
+		pFile->time[1] = -1UL;
+	}
+	pFile->pInformation = pInformation;
+	pFile->size = pInformation->formatHeader(pFile,NULL,-1UL);
+	pFile->size += pInformation->pLog->formatedSize * pInformation->pLog->unitNumber;
+
+	return NULL;
+}
+
+int FSFILE_Open(FSFILE *pFile)
+{
+	if(pFile->attribute & FSFILE_ATTR_OPEN)
+		return FSMIDR_CONFLICT;
+	else
+		pFile->attribute |= FSFILE_ATTR_OPEN;
+	pFile->offset = 0;
+	return FSMIDR_OK;
+}
+
+int FSFILE_Close(FSFILE *pFile)
+{
+	if(!(pFile->attribute & FSFILE_ATTR_OPEN))
+		return FSMIDR_CONFLICT;
+	if(pFile->attribute & FSFILE_ATTR_EVENT)
+	{
+		pFile->size = pFile->pInformation->formatHeader(pFile,NULL,-1UL);
+		pFile->size += pFile->pInformation->pLog->formatedSize * pFile->pInformation->pLog->unitNumber;
+	}
+	pFile->attribute &=~FSFILE_ATTR_EVENT;
+	pFile->attribute &=~FSFILE_ATTR_OPEN;
+	return FSMIDR_OK;
+}
+
+int FSFILE_OnChange(FSFILE *pFile, FSLOG* pLog)
+{
+	if(pFile->pInformation->pLog == pLog)
+	{
+		if(pFile->attribute & FSFILE_ATTR_OPEN)
+			pFile->attribute |= FSFILE_ATTR_EVENT;
+		else
+		{
+			pFile->size = pFile->pInformation->formatHeader(pFile,NULL,-1UL);
+			pFile->size += pLog->formatedSize * pLog->unitNumber;
+		}
+		return 1;
+	}
+	return 0;
 }

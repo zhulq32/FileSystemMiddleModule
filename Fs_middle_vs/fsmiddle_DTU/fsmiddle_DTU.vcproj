@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="Fs_middle"
-	ProjectGUID="{67D17BE4-DAF4-4C27-A9AE-B45F5A302049}"
-	RootNamespace="Fs_middle"
+	Name="fsmiddle_DTU"
+	ProjectGUID="{B4C463F6-22E0-4DC5-A915-9361D7EB127D}"
+	RootNamespace="fsmiddle_DTU"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -41,8 +41,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="fs_middle;test_case"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(ProjectDir)fs_middle\inc\&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;VS_SIMULATE;FAST_MODE;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -172,19 +172,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\fsmid_test_case.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\fsmid_test_port.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\main.cpp"
+				RelativePath=".\fsmiddle_DTU.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\stdafx.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\test_case_log.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\test_tdu_enviroment.cpp"
 				>
 			</File>
 		</Filter>
@@ -194,7 +194,23 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\commonDefEx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\dbmsV1.h"
+				>
+			</File>
+			<File
+				RelativePath=".\dpa10x.h"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\sysTimerV1.h"
 				>
 			</File>
 			<File
@@ -209,41 +225,29 @@
 			>
 		</Filter>
 		<Filter
-			Name="Fs_middle"
+			Name="fs_middle"
 			>
 			<Filter
 				Name="inc"
 				>
 				<File
-					RelativePath=".\fs_middle\fsmid_def.h"
+					RelativePath=".\fs_middle\inc\fsmid_config.h"
 					>
 				</File>
 				<File
-					RelativePath=".\fs_middle\fsmid_file.h"
+					RelativePath=".\fs_middle\inc\fsmid_def.h"
 					>
 				</File>
 				<File
-					RelativePath=".\fs_middle\fsmid_inc.h"
+					RelativePath=".\fs_middle\inc\fsmid_log.h"
 					>
 				</File>
 				<File
-					RelativePath=".\fs_middle\fsmid_log.h"
+					RelativePath=".\fs_middle\inc\fsmid_point.h"
 					>
 				</File>
 				<File
-					RelativePath=".\fs_middle\fsmid_port.h"
-					>
-				</File>
-				<File
-					RelativePath=".\fs_middle\fsmid_system.h"
-					>
-				</File>
-				<File
-					RelativePath=".\fs_middle\fsmid_type.h"
-					>
-				</File>
-				<File
-					RelativePath=".\fs_middle\list_linux.h"
+					RelativePath=".\fs_middle\inc\list_linux.h"
 					>
 				</File>
 			</Filter>
@@ -251,15 +255,27 @@
 				Name="src"
 				>
 				<File
-					RelativePath=".\fs_middle\fsmid_file.cpp"
+					RelativePath=".\fs_middle\src\fsmid_app.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\fs_middle\fsmid_log.cpp"
+					RelativePath=".\fs_middle\src\fsmid_config.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\fs_middle\fsmid_system.cpp"
+					RelativePath=".\fs_middle\src\fsmid_log.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\fs_middle\src\fsmid_point.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\fs_middle\inc\fsmid_port.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fs_middle\src\fsmid_util.cpp"
 					>
 				</File>
 			</Filter>

@@ -10,6 +10,10 @@
 //#include "from_linux.h"
 
 
+#ifndef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Simple doubly linked list implementation.
  *
@@ -609,5 +613,9 @@ static inline void list_splice_tail_init(struct list_head *list,
  * too wasteful.
  * You lose the ability to access the tail in O(1).
  */
+
+#ifndef __cplusplus
+};
+#endif
 
 #endif
